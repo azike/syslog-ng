@@ -1178,8 +1178,11 @@ log_writer_flush_finalize(LogWriter *self)
   LogProtoStatus status = log_proto_client_flush(self->proto);
 
   if (status == LPS_SUCCESS || status == LPS_PARTIAL)
-    return TRUE;
-
+    {
+      /* Signal controlling AFFileDestWriter to check for logrotation */
+      log_pipe_notify(self->control, NC_LOGROTATE, NULL);
+      return TRUE;
+    }
 
   return FALSE;
 }
