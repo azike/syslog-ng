@@ -140,3 +140,14 @@ log_transport_free(LogTransport *self)
   self->free_fn(self);
   g_free(self);
 }
+
+void
+log_transport_update_fd(LogTransport *s, gint new_fd)
+{
+  if (s->fd != -1)
+    {
+      close(s->fd);
+    }
+
+  s->fd = new_fd;
+}
