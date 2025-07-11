@@ -1194,7 +1194,6 @@ static LogProtoStatus
 log_writer_flush_finalize(LogWriter *self)
 {
   LogProtoStatus status = log_proto_client_flush(self->proto);
-  log_writer_logrotate(self);
   return status;
 }
 
