@@ -1325,10 +1325,12 @@ log_writer_logrotate(LogWriter *self, gsize buf_len, gboolean *write_error)
     {
       // reopening was successful
       // flush remaining messages to 'old' log file
-      if (!log_writer_flush_finalize(self)) {
-        *write_error = TRUE;
-        return;
-      }
+      LogProtoStatus status = log_writer_flush_finalize(self);
+      if (!(status == LPS_SUCCESS || status == LPS_PARTIAL))
+        {
+          *write_error = TRUE;
+          return;
+        }
 
       // update proto-client
       log_writer_free_proto(self);
@@ -1389,7 +1391,7 @@ log_writer_flush(LogWriter *self, LogWriterFlushMode flush_mode)
           // if there was an error during reopening quit
           if (!self->proto)
             {
-              return FALSE;
+              return LPS_ERROR;
             }
         }
     }
