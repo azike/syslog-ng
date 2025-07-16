@@ -226,7 +226,7 @@ affile_dw_logrotate(AFFileDestWriter *self, gpointer user_data)
   LogRotateOptions *logrotate_options = &(self->owner->logrotate_options);
   const gchar *filename = self->filename;
 
-  self->cached_filesize+=buf_len;
+  self->cached_filesize += buf_len;
 
   if (is_logrotate_enabled(logrotate_options) && is_logrotate_pending(logrotate_options, self->cached_filesize))
     {
