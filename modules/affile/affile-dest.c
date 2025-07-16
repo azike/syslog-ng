@@ -167,17 +167,17 @@ _dw_reopen(AFFileDestWriter *self, LogProtoClient **p)
                                            &self->owner->writer_options.proto_options);
 
       // get current filesize
-      if (stat(self->filename, &st) == 0)
+      if (fstat(fd, &st) == 0)
         {
           self->cached_filesize = st.st_size;
         }
       else
         {
-          // TODO: what happens here?
-          msg_error("Error reading file size after opening file; assuming size = 0",
+          msg_error("Error reading file size after opening file",
                     evt_tag_str("filename", self->filename),
                     evt_tag_errno("errno", errno));
-          self->cached_filesize = 0;
+          // treating as opening error
+          open_result = FILE_OPENER_RESULT_ERROR_TRANSIENT;
         }
     }
   else if (open_result == FILE_OPENER_RESULT_ERROR_TRANSIENT)
