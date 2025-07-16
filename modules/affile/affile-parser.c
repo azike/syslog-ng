@@ -57,7 +57,7 @@ static CfgLexerKeyword affile_keywords[] =
   { "logrotate",          KW_LOGROTATE },
   { "enable",             KW_LOGROTATE_ENABLE },
   { "size",               KW_LOGROTATE_SIZE },
-  { "rotate",             KW_LOGROTATE_ROTATIONS},
+  { "rotations",          KW_LOGROTATE_ROTATIONS},
   { NULL }
 };
 

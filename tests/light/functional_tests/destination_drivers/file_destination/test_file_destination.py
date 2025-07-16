@@ -36,7 +36,7 @@ def test_file_destination(config, syslog_ng):
     epsilon = max_size / 10
 
     generator_source = config.create_example_msg_generator_source(num=counter, freq=0.0001, template=config.stringify(message))
-    file_destination = config.create_file_destination(file_name=file_name, logrotate="enable(yes), rotate(" + str(max_rotations) + "), size(" + str(max_size) + ")")
+    file_destination = config.create_file_destination(file_name=file_name, logrotate="enable(yes), rotations(" + str(max_rotations) + "), size(" + str(max_size) + ")")
 
     config.create_logpath(statements=[generator_source, file_destination])
     syslog_ng.start(config)
