@@ -602,18 +602,11 @@ affile_dd_set_logrotate_enable(LogDriver *s, gboolean use_logrotate)
   self->logrotate_options.enable = use_logrotate;
 }
 
-gboolean affile_dd_set_logrotate_rotations(LogDriver *s, gint max_rotations)
+void affile_dd_set_logrotate_rotations(LogDriver *s, gint max_rotations)
 {
   AFFileDestDriver *self = (AFFileDestDriver *) s;
 
-  if (max_rotations <= 0)
-    {
-      return FALSE;
-    }
-
   self->logrotate_options.max_rotations = max_rotations;
-  return TRUE;
-
 }
 
 void affile_dd_set_logrotate_size(LogDriver *s, gint size)

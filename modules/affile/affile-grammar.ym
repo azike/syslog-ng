@@ -292,12 +292,9 @@ dest_affile_logrotate_options
 	|
 
 dest_affile_logrotate_option
-	: KW_LOGROTATE_ENABLE '(' yesno ')' {affile_dd_set_logrotate_enable(last_driver, $3);}
-	| KW_LOGROTATE_SIZE '(' nonnegative_integer ')' {affile_dd_set_logrotate_size(last_driver, $3);}
-	| KW_LOGROTATE_ROTATIONS '(' nonnegative_integer ')'
-      {
-        CHECK_ERROR(affile_dd_set_logrotate_rotations(last_driver, $3), @3, "The maximum number of log-rotations can not be set to 0");
-      }
+	: KW_LOGROTATE_ENABLE '(' yesno ')' { affile_dd_set_logrotate_enable(last_driver, $3); }
+	| KW_LOGROTATE_SIZE '(' positive_integer ')' { affile_dd_set_logrotate_size(last_driver, $3); }
+	| KW_LOGROTATE_ROTATIONS '(' positive_integer ')' { affile_dd_set_logrotate_rotations(last_driver, $3); }
 
 dest_afpipe_params
   : template_content
