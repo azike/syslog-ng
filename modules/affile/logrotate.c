@@ -40,6 +40,7 @@ void logrotate_options_defaults(LogRotateOptions *logrotate_options)
   logrotate_options->max_rotations = LR_DEFAULT_ROTATIONS;
   logrotate_options->interval = NONE;
   logrotate_options->date_format = LR_DEFAULT_DATE_FORMAT;
+  logrotate_options->pending = FALSE;
 }
 
 gboolean logrotate_is_enabled(LogRotateOptions *logrotate_options)
@@ -62,6 +63,17 @@ gboolean logrotate_is_required(LogRotateOptions *logrotate_options, const gsize 
     }
 
   return (filesize >= logrotate_options->size);
+}
+
+gboolean logrotate_is_pending(LogRotateOptions *logrotate_options)
+{
+
+  if (logrotate_options == NULL)
+    {
+      return FALSE;
+    }
+
+  return logrotate_options->pending;
 }
 
 gchar *get_log_file_name(const gchar *filename, gsize rotation_suffix)
