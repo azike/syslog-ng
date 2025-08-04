@@ -163,13 +163,15 @@ _dw_reopen(AFFileDestWriter *self, LogProtoClient **p)
 
       LogTransport *transport = file_opener_construct_transport(self->owner->file_opener, fd);
 
-      *p = file_opener_construct_dst_proto(self->owner->file_opener, transport,
-                                           &self->owner->writer_options.proto_options);
+      LogProtoClient *proto = file_opener_construct_dst_proto(self->owner->file_opener, transport,
+                                                              &self->owner->writer_options.proto_options);
 
       // get current filesize
       if (fstat(fd, &st) == 0)
         {
+          // in this case the reopen and fstat succeeded
           self->cached_filesize = st.st_size;
+          *p = proto;
         }
       else
         {
@@ -178,6 +180,11 @@ _dw_reopen(AFFileDestWriter *self, LogProtoClient **p)
                     evt_tag_errno("errno", errno));
           // treating as opening error
           open_result = FILE_OPENER_RESULT_ERROR_TRANSIENT;
+
+          if (proto)
+            {
+              log_proto_client_free(proto);
+            }
         }
     }
   else if (open_result == FILE_OPENER_RESULT_ERROR_TRANSIENT)
@@ -198,6 +205,9 @@ affile_dw_reopen(AFFileDestWriter *self)
 
   if (open_result == FILE_OPENER_RESULT_ERROR_PERMANENT)
     {
+      // no need to call log_proto_client_free(proto), as
+      // _dw_reopen only sets proto if the reopen was successful
+      msg_error("Error when reopening log file", evt_tag_str("filename", self->filename));
       return FALSE;
     }
 
@@ -238,6 +248,8 @@ affile_dw_logrotate(AFFileDestWriter *self, gpointer user_data)
           return FALSE;
         }
 
+      // The reference pointed to by p is only updated if the reopen was successful,
+      // e.g. open_result == FILE_OPENER_RESULT_SUCCESS
       FileOpenerResult open_result = _dw_reopen(self, p);
       if (open_result == FILE_OPENER_RESULT_SUCCESS)
         {
