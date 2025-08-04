@@ -238,13 +238,13 @@ affile_dw_logrotate(AFFileDestWriter *self, gpointer user_data)
 
   self->cached_filesize += buf_len;
 
-  if (is_logrotate_enabled(logrotate_options) && is_logrotate_pending(logrotate_options, self->cached_filesize))
+  if (logrotate_is_enabled(logrotate_options) && logrotate_is_required(logrotate_options, self->cached_filesize))
     {
-      // we need to flush the buffer here!
-      LogRotateStatus status = do_logrotate(logrotate_options, filename);
+      LogRotateStatus status = logrotate_do_rotate(logrotate_options, filename);
 
       if (status != LR_SUCCESS)
         {
+          msg_error("Error while rotating log files", evt_tag_str("filename", self->filename));
           return FALSE;
         }
 
@@ -254,8 +254,8 @@ affile_dw_logrotate(AFFileDestWriter *self, gpointer user_data)
       if (open_result == FILE_OPENER_RESULT_SUCCESS)
         {
           /* best case --> continue with opened file */
-          msg_debug("Reopened log file",
-                    evt_tag_str("filename", self->filename));
+          msg_info("Reopened log file after logrotate",
+                   evt_tag_str("filename", self->filename));
 
         }
       else

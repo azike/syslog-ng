@@ -42,7 +42,7 @@ void logrotate_options_defaults(LogRotateOptions *logrotate_options)
   logrotate_options->date_format = LR_DEFAULT_DATE_FORMAT;
 }
 
-gboolean is_logrotate_enabled(LogRotateOptions *logrotate_options)
+gboolean logrotate_is_enabled(LogRotateOptions *logrotate_options)
 {
   if (logrotate_options == NULL)
     {
@@ -54,7 +54,7 @@ gboolean is_logrotate_enabled(LogRotateOptions *logrotate_options)
     }
 }
 
-gboolean is_logrotate_pending(LogRotateOptions *logrotate_options, const gsize filesize)
+gboolean logrotate_is_required(LogRotateOptions *logrotate_options, const gsize filesize)
 {
   if (logrotate_options == NULL)
     {
@@ -78,7 +78,7 @@ gchar *get_log_file_name(const gchar *filename, gsize rotation_suffix)
  * The renaming thread renames all other files including the tmp file to filename.1
  *
  */
-LogRotateStatus do_logrotate(LogRotateOptions *logrotate_options, const gchar *filename)
+LogRotateStatus logrotate_do_rotate(LogRotateOptions *logrotate_options, const gchar *filename)
 {
   if (logrotate_options == NULL || filename == NULL)
     {
