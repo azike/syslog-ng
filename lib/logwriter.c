@@ -1312,7 +1312,7 @@ log_writer_process_handshake(LogWriter *self)
  *
  * The log_pipe_notify call creates a new LogProtoClient, and the log_writer is updated.
  */
-static void
+static LogProtoStatus
 log_writer_logrotate(LogWriter *self, gsize buf_len, gboolean *write_error)
 {
   LogProtoClient *proto = NULL;
@@ -1323,19 +1323,25 @@ log_writer_logrotate(LogWriter *self, gsize buf_len, gboolean *write_error)
 
   if (proto)
     {
-      // reopening was successful
-      // flush remaining messages to 'old' log file
+      // reopening was successful, flush remaining messages to 'old' log file
       LogProtoStatus status = log_writer_flush_finalize(self);
       if (!(status == LPS_SUCCESS || status == LPS_PARTIAL))
         {
+          log_proto_client_free(proto);
           *write_error = TRUE;
-          return;
+          return status;
         }
 
       // update proto-client
       log_writer_free_proto(self);
       log_writer_set_proto(self, proto);
     }
+
+  // if proto has not been set in the log_pipe_notify call (i.e. proto == null)
+  // and no error code has been returned, the proto has been already set by
+  // affile_dw_reopen and it was successful
+  // if proto has not been update return error
+  return log_writer_opened(self)? LPS_SUCCESS : LPS_ERROR;
 }
 
 /*
@@ -1385,14 +1391,9 @@ log_writer_flush(LogWriter *self, LogWriterFlushMode flush_mode)
         {
           stats_counter_inc(self->metrics.written_messages);
 
-          // TODO: need to know if logrotation is pending and flush before potential error!
-          log_writer_logrotate(self, msg_len, &write_error);
-
-          // if there was an error during reopening quit
-          if (!self->proto)
-            {
-              return LPS_ERROR;
-            }
+          LogProtoStatus status = log_writer_logrotate(self, msg_len, &write_error);
+          if (status != LPS_SUCCESS)
+            return status;
         }
     }
 
