@@ -1319,7 +1319,19 @@ log_writer_logrotate(LogWriter *self, gsize buf_len, gboolean *write_error)
 
   /* Signal AFFileDestWriter to check for logrotation */
   gpointer args[] = { &proto, (gpointer *) buf_len };
-  log_pipe_notify(self->control, NC_LOGROTATE, args);
+  gint result = log_pipe_notify(self->control, NC_LOGROTATE, args);
+
+  // error during logrotate or reopen of log file
+  if (result == NR_ERROR)
+    {
+      // flush 'old' log file
+      if (log_writer_opened(self))
+        log_writer_flush_finalize(self);
+
+      log_writer_free_proto(self);
+      *write_error = TRUE;
+      return LPS_ERROR;
+    }
 
   if (proto)
     {
