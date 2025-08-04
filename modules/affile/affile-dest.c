@@ -213,6 +213,11 @@ affile_dw_reopen(AFFileDestWriter *self)
 
   log_writer_reopen(self->writer, proto);
 
+  if (open_result == FILE_OPENER_RESULT_ERROR_TRANSIENT)
+    {
+      return FALSE;
+    }
+
   return TRUE;
 }
 
@@ -253,16 +258,22 @@ affile_dw_logrotate(AFFileDestWriter *self, gpointer user_data)
                     evt_tag_str("filename", self->filename));
 
         }
-      else if (open_result == FILE_OPENER_RESULT_ERROR_TRANSIENT)
-        {
-          /* try again to reopen */
-          msg_info("Trying to re-open file", evt_tag_str("filename", self->filename));
-          main_loop_call((MainLoopTaskFunc) affile_dw_reopen, (gpointer) self, TRUE);
-        }
       else
         {
-          /* TODO: Do something */
-          return FALSE;
+          if (open_result == FILE_OPENER_RESULT_ERROR_TRANSIENT)
+            {
+              /* try again to reopen */
+              msg_info("Trying again to re-open file after logrotate", evt_tag_str("filename", self->filename));
+              gpointer result = main_loop_call((MainLoopTaskFunc) affile_dw_reopen, (gpointer) self, TRUE);
+              gboolean success = GPOINTER_TO_INT(result);
+              return success;
+            }
+          else
+            {
+              /* FILE_OPENER_RESULT_PERMANENT_ERROR */
+              msg_error("Error when reopening log file after logrotate", evt_tag_str("filename", self->filename));
+              return FALSE;
+            }
         }
     }
 
@@ -463,8 +474,14 @@ affile_dw_notify(LogPipe *s, gint notify_code, gpointer user_data)
       affile_dw_reap(self);
       break;
     case NC_LOGROTATE:
-      affile_dw_logrotate(self, user_data);
+    {
+      gboolean success = affile_dw_logrotate(self, user_data);
+      if (!success)
+        {
+          return NR_ERROR;
+        }
       break;
+    }
     default:
       break;
     }
